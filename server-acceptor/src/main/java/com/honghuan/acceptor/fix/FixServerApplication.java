@@ -14,11 +14,19 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * FIX 服务端应用程序实现类
+ * 负责处理所有 FIX 消息的接收和发送逻辑
+ */
 @Service
 @Slf4j
 public class FixServerApplication extends MessageCracker implements Application {
 
-
+    /**
+     * 处理登录消息
+     * @param message Logon 消息对象
+     * @param sessionID 会话 ID
+     */
     @Handler
     public void onLogonMessage(Logon message, SessionID sessionID) {
         Session session = Session.lookupSession(sessionID);
@@ -32,6 +40,11 @@ public class FixServerApplication extends MessageCracker implements Application 
         session.sentLogon();
     }
 
+    /**
+     * 处理新订单消息
+     * @param message 新订单消息对象
+     * @param sessionID 会话 ID
+     */
     @Handler
     public void onNewOrderMessage(NewOrderSingle message, SessionID sessionID) throws FieldNotFound {
         log.info("receive new order:{}", message.toString());
@@ -60,48 +73,51 @@ public class FixServerApplication extends MessageCracker implements Application 
         }
     }
 
-
+    /**
+     * 处理取消订单消息
+     * @param message 取消订单消息对象
+     * @param sessionID 会话 ID
+     */
     @Handler
     public void onCancelOrderMessage(OrderCancelRequest message, SessionID sessionID) {
         log.warn("receive new cancel order message:{}", message.toString());
     }
 
-
+    // QuickFIX 生命周期回调方法
     @Override
     public void onCreate(SessionID sessionID) {
-        log.info("onCreate");
+        log.info("会话创建");
     }
 
     @Override
     public void onLogon(SessionID sessionID) {
-        log.info("onLogon");
+        log.info("会话登录成功");
     }
 
     @Override
     public void onLogout(SessionID sessionID) {
-        log.info("onLogout");
+        log.info("会话登出");
     }
 
     @Override
     public void toAdmin(Message message, SessionID sessionID) {
-        log.info("toAdmin msg 发送管理消息 {}", message);
+        log.info("发送管理类消息 {}", message);
     }
 
-    @SneakyThrows
     @Override
     public void fromAdmin(Message message, SessionID sessionID) throws FieldNotFound, IncorrectDataFormat, IncorrectTagValue, RejectLogon {
-        log.info(String.format("接收管理消息sessionId=%s, message=%s", sessionID, message));
+        log.info("接收管理类消息 sessionId={}, message={}", sessionID, message);
         crack(message, sessionID);
     }
 
     @Override
     public void toApp(Message message, SessionID sessionID) throws DoNotSend {
-        log.info("toApp msg 发送业务消息 {}", message);
+        log.info("发送应用消息 {}", message);
     }
 
     @Override
     public void fromApp(Message message, SessionID sessionID) throws FieldNotFound, IncorrectDataFormat, IncorrectTagValue, UnsupportedMessageType {
-        log.info("fromApp msg 接收业务消息 {}", message);
+        log.info("接收应用消息 {}", message);
         crack(message, sessionID);
     }
 }

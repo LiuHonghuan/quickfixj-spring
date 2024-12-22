@@ -9,33 +9,40 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.InputStream;
 
+/**
+ * FIX 客户端主类
+ * 负责初始化和管理 FIX 客户端连接
+ */
 @Service
 @Slf4j
 public class FixClient {
 
     /**
-     * The Initiator.
+     * FIX 消息发送器实例
      */
     private Initiator initiator = null;
+
     /**
-     * The Initiator started.
+     * 发送器启动状态标志
      */
     private boolean initiatorStarted = false;
 
     /**
-     * The Client application.
+     * FIX 客户端应用程序实例
      */
     @Resource
     private FixClientApplication clientApplication;
 
     /**
-     * Start.
+     * 启动 FIX 客户端
+     * 在 Spring 容器初始化后自动执行
      */
     @PostConstruct
     public void start() {
         try (InputStream inputStream = new DefaultResourceLoader().getResource("classpath:client.cfg").getInputStream()) {
             SessionSettings settings = new SessionSettings(inputStream);
             MessageStoreFactory storeFactory = new FileStoreFactory(settings);
+            // 使用内存存储替代文件存储
             MessageStoreFactory storeFactory1 = new MemoryStoreFactory();
             LogFactory logFactory = new FileLogFactory(settings);
             MessageFactory messageFactory = new DefaultMessageFactory();
@@ -47,7 +54,8 @@ public class FixClient {
     }
 
     /**
-     * Logon.
+     * 执行 FIX 登录
+     * 如果发送器未启动则启动发送器，否则对所有会话执行登录
      */
     public synchronized void logon() {
         if (!initiatorStarted) {
@@ -64,6 +72,4 @@ public class FixClient {
             }
         }
     }
-
-
 }
